@@ -9,14 +9,19 @@ use Illuminate\Support\Facades\Auth;
 class TaskController extends Controller
 {
     
-    public function index()
-    {
-       
-        $tasks = Task::all();
-        
-        
-        return view('tasks.index', compact('tasks'));
+    public function index(Request $request)
+{
+    $query = Task::query();
+
+    if ($request->has('search') && $request->search != '') {
+        $query->where('name', 'like', '%' . $request->search . '%')
+              ->orWhere('short_description', 'like', '%' . $request->search . '%');
     }
+
+    $tasks = $query->get();
+
+    return view('tasks.index', compact('tasks'));
+}
 
     
     public function create()

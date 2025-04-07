@@ -7,6 +7,16 @@
             <div class="card shadow-lg" style="border-radius: 12px; background-color: #ffffff; border: 1px solid #dee2e6;">
                 <div class="card-header d-flex justify-content-between align-items-center" style="background-color: #007bff; color: white; border-top-left-radius: 12px; border-top-right-radius: 12px;">
                     <h4 class="mb-0"><i class="fas fa-tasks"></i> All Tasks</h4>
+                    
+                    <!-- Search Form -->
+                    <form method="GET" action="{{ route('tasks.index') }}" class="d-flex align-items-center gap-2">
+                        <input type="text" name="search" value="{{ request()->get('search') }}" class="form-control" placeholder="Search tasks..." style="border-radius: 6px; padding: 8px 16px; width: 250px;">
+                        <button type="submit" class="btn btn-light" style="font-weight: bold; border-radius: 5px; padding: 8px 16px;">
+                            <i class="fas fa-search"></i> Search
+                        </button>
+                    </form>
+
+                    <!-- Create Task Button -->
                     <a href="{{ route('tasks.create') }}" class="btn btn-light" style="font-weight: bold; border-radius: 5px; padding: 8px 16px;">
                         <i class="fas fa-plus-circle"></i> Create Task
                     </a>
@@ -63,7 +73,7 @@
                                                 <a href="{{ route('tasks.edit', $task->id) }}" class="btn btn-sm" style="border-radius: 6px; padding: 5px 10px; background-color: #007bff; color: white; border: none; transition: background-color 0.3s;">
                                                     <i class="fas fa-edit"></i> Edit
                                                 </a>
-                                        
+                                                
                                                 <!-- Delete Button -->
                                                 <form action="{{ route('tasks.destroy', $task->id) }}" method="POST" style="margin-bottom: 0;">
                                                     @csrf
@@ -74,7 +84,6 @@
                                                 </form>
                                             </div>
                                         </td>
-                                        
                                     </tr>
                                 @endforeach
                             </tbody>
