@@ -10,7 +10,7 @@ class TaskController extends Controller
 {
     
     public function index(Request $request)
-{
+    {
     $query = Task::query();
 
     if ($request->has('search') && $request->search != '') {
@@ -18,10 +18,11 @@ class TaskController extends Controller
               ->orWhere('short_description', 'like', '%' . $request->search . '%');
     }
 
-    $tasks = $query->get();
+    // Paginate the tasks, 10 per page (you can adjust the number)
+    $tasks = $query->paginate(1);
 
     return view('tasks.index', compact('tasks'));
-}
+   }
 
     
     public function create()

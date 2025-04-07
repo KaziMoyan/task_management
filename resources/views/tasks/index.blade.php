@@ -90,6 +90,11 @@
                         </table>
                     </div>
 
+                    <!-- Pagination Links -->
+                    <div class="d-flex justify-content-center mt-3">
+                        {{ $tasks->links() }}
+                    </div>
+
                 </div>
             </div>
         </div>
