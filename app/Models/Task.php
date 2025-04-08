@@ -21,5 +21,8 @@ class Task extends Model
         'submit_at',
         'status',
     ];
-    
+    public function user()
+{
+    return $this->belongsTo(User::class);
+}
 }

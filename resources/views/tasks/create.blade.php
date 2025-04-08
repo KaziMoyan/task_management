@@ -33,6 +33,12 @@
                         <label for="name" style="{{ $labelStyle }}">Task Name</label>
                         <input type="text" name="name" class="form-control" style="{{ $inputStyle }}" required>
                     </div>
+                    <label for="user_id">User</label>
+  <select name="user_id" id="user_id">
+  @foreach($users as $item)
+    <option value="{{$item->id}}">{{$item->name}}</option>
+    @endforeach
+  </select>
 
                     <div class="mb-3" style="{{ $wrapperStyle }}">
                         <label for="short_description" style="{{ $labelStyle }}">Short Description</label>
