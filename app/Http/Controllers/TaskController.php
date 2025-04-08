@@ -18,7 +18,7 @@ class TaskController extends Controller
               ->orWhere('short_description', 'like', '%' . $request->search . '%');
     }
 
-    // Paginate the tasks, 10 per page (you can adjust the number)
+    
     $tasks = $query->paginate(1);
 
     return view('tasks.index', compact('tasks'));
@@ -46,7 +46,7 @@ class TaskController extends Controller
             'status' => 'required|string',
         ]);
 
-        // Create a new task record
+       
         Task::create([
             'assign_by_id' => Auth::id(), 
             'user_id' => Auth::id(), 

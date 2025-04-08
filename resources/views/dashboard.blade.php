@@ -1,18 +1,40 @@
 @extends('layouts.app')
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
 
 @section('content')
 <div class="container-fluid">
     <div class="row">
-        <div class="col-md-9 d-flex justify-content-center">
-            <div class="content" style="padding: 40px; width: 80%; text-align: center;">
-                <h2 style="font-size: 30px; color: #343a40;">
-                    <i class="fas fa-home" style="color: #007bff;"></i> Welcome to your Dashboard!
-                </h2>
-                <p class="lead" style="font-size: 18px; color: #6c757d;">Manage your tasks and see your progress right here!</p>
-            </div>
-        </div>
+        @php
+        $today = \Carbon\Carbon::today();
+        $attendance = \App\Models\Attendance::where('user_id', auth()->id())->whereDate('date', $today)->first();
+        $isStarted = $attendance && $attendance->start_time && !$attendance->end_time;
+        $isEnded = $attendance && $attendance->start_time && $attendance->end_time;
+       @endphp
+    
+    <div class="d-flex justify-content-center mt-5">
+        <form method="POST" action="{{ route('attendance.toggle') }}">
+            @csrf
+            <button type="submit"
+                class="btn btn-lg"
+                style="
+                    font-size: 2rem;
+                    padding: 20px 40px;
+                    border-radius: 12px;
+                    background-color: {{ $isStarted ? '#dc3545' : '#007BFF' }};
+                    color: white;
+                    border: none;
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+                    transition: background-color 0.3s ease;
+                ">
+                <i class="fas fa-play"></i>
+                {{ $isStarted ? 'End Attendance' : 'Start Attendance' }}
+            </button>
+        </form>
+    </div>
+    
+        
         <!-- Sidebar -->
         <div class="col-md-3">
             <div class="sidebar" style="background-color: #f8f9fa; border-right: 2px solid #ddd; padding: 20px;">
