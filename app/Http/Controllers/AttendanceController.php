@@ -71,23 +71,38 @@ class AttendanceController extends Controller
     }
 
     public function myAttendance(Request $request)
-{
-    $user = Auth::user();
-    $month = $request->input('month', now()->month);
-    $year = $request->input('year', now()->year);
-
-    $attendances = Attendance::where('user_id', $user->id)
-        ->whereMonth('date', $month)
-        ->whereYear('date', $year)
-        ->orderBy('date', 'desc')
-        ->get();
-
-    $daysPresent = $attendances->filter(fn($a) => $a->start_time && $a->end_time)->count();
-    $totalDays = cal_days_in_month(CAL_GREGORIAN, $month, $year);
-    $daysAbsent = $totalDays - $daysPresent;
-
-    return view('attend.my_attendance', compact('attendances', 'month', 'year', 'daysPresent', 'daysAbsent'));
-}
+    {
+        $user = Auth::user();
+        $month = $request->input('month', now()->month);
+        $year = $request->input('year', now()->year);
+    
+        // Get today's attendance data
+        $attendances = Attendance::where('user_id', $user->id)
+            ->whereMonth('date', $month)
+            ->whereYear('date', $year)
+            ->orderBy('date', 'desc')
+            ->get();
+    
+        // Filter and calculate working hours for today
+        $daysPresent = $attendances->filter(fn($a) => $a->start_time && $a->end_time)->count();
+        $totalWorkingHoursToday = 0;
+    
+        // Calculate total working hours for today
+        foreach ($attendances as $attendance) {
+            if ($attendance->start_time && $attendance->end_time) {
+                $start = Carbon::parse($attendance->start_time);
+                $end = Carbon::parse($attendance->end_time);
+                $totalWorkingHoursToday += $start->diffInHours($end);
+            }
+        }
+    
+        // Calculate total days in the month and days absent
+        $totalDays = cal_days_in_month(CAL_GREGORIAN, $month, $year);
+        $daysAbsent = $totalDays - $daysPresent;
+    
+        return view('attend.my_attendance', compact('attendances', 'month', 'year', 'daysPresent', 'daysAbsent', 'totalWorkingHoursToday'));
+    }
+    
 
 public function exportMyAttendance(Request $request)
     {
@@ -102,7 +117,7 @@ public function exportMyAttendance(Request $request)
             ->orderBy('date', 'desc')
             ->get();
 
-        // Create a PDF from the view
+       
         $pdf = PDF::loadView('attend.my_attendance_pdf', [
             'attendances' => $attendances,
             'user' => $user,
@@ -110,7 +125,6 @@ public function exportMyAttendance(Request $request)
             'year' => $year
         ]);
 
-        // Return the PDF for download
         return $pdf->download('my_attendance_report.pdf');
     }
     public function filterAttendance(Request $request)
@@ -131,7 +145,7 @@ public function exportMyAttendance(Request $request)
 
     $attendances = $query->get();
 
-    // Summary:
+    
     $summary = [
         'present' => $attendances->where('status', 'present')->count(),
         'leave' => $attendances->where('status', 'leave')->count(),

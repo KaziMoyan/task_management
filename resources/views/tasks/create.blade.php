@@ -33,12 +33,16 @@
                         <label for="name" style="{{ $labelStyle }}">Task Name</label>
                         <input type="text" name="name" class="form-control" style="{{ $inputStyle }}" required>
                     </div>
-                    <label for="user_id">User</label>
-  <select name="user_id" id="user_id">
-  @foreach($users as $item)
-    <option value="{{$item->id}}">{{$item->name}}</option>
-    @endforeach
-  </select>
+
+                    <div class="mb-3" style="{{ $wrapperStyle }}">
+                        <label for="user_id" style="{{ $labelStyle }}">Assign to User</label>
+                        <select name="user_id" id="user_id" class="form-select" style="{{ $inputStyle }}" required>
+                            <option value="" disabled selected>Select a user</option>
+                            @foreach($users as $item)
+                                <option value="{{ $item->id }}">{{ $item->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
 
                     <div class="mb-3" style="{{ $wrapperStyle }}">
                         <label for="short_description" style="{{ $labelStyle }}">Short Description</label>

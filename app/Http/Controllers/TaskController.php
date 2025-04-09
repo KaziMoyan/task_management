@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
-
+use Carbon\Carbon;
 use App\Models\Task;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -52,7 +52,7 @@ class TaskController extends Controller
        
         Task::create([
             'assign_by_id' => auth()->id(),
-'user_id' => $request->user_id,
+           'user_id' => $request->user_id,
             'name' => $request->name,
             'short_description' => $request->short_description,
             'description' => $request->description,
@@ -129,15 +129,60 @@ class TaskController extends Controller
     public function myTasks(Request $request)
     {
         $query = Task::where('user_id', auth()->id());
-
-         if ($request->has('search') && $request->search != '') {
-           $query->where('name', 'like', '%' . $request->search . '%');
-             }
-
-        $tasks = $query->orderBy('date', 'desc')->paginate(10);
-
+    
+        if ($request->has('search') && $request->search != '') {
+            $query->where('name', 'like', '%' . $request->search . '%');
+        }
+    
+        // Set pagination to 3 tasks per page
+        $tasks = $query->orderBy('date', 'desc')->paginate(2);  // Changed from 10 to 3
+    
         return view('tasks.my_tasks', compact('tasks'));
     }
+    
+
+
+    
+    public function updateTask(Request $request, $id)
+    {
+    $task = Task::findOrFail($id);
+
+    $task->note = $request->input('note');
+    $task->status = $request->input('status');
+    $task->time_start = $request->input('time_start');
+    $task->time_end = $request->input('time_end');
+
+    $task->save();
+
+    return redirect()->back()->with('success', 'Task updated successfully!');
+  }
+// public function update(Request $request, $id)
+// {
+//     $task = Task::findOrFail($id);
+//     $task->update($request->all());
+//     return redirect()->back()->with('success', 'Task updated successfully!');
+// }
+// public function show($id)
+// {
+//     $task = Task::findOrFail($id);
+//     return response()->json($task);
+// }
+
+// TaskController.php
+public function show($id)
+{
+    $task = Task::findOrFail($id);
+
+    // Calculate the time difference
+    $startTime = Carbon::parse($task->time_start);
+    $endTime = Carbon::parse($task->time_end);
+    $duration = $startTime->diff($endTime);
+
+    // Format the duration to display hours, minutes, and seconds
+    $totalTime = $duration->format('%h hours %i minutes %s seconds');
+
+    return view('tasks.task_details', compact('task', 'totalTime'));
+}
 
 
 }

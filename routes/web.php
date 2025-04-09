@@ -10,6 +10,15 @@ use App\Http\Controllers\DashboardController;
 
 
 
+Route::resource('tasks', TaskController::class);
+
+Route::get('/tasks/details/{id}', [TaskController::class, 'show'])->name('tasks.details');
+
+
+Route::get('/tasks/{id}', [TaskController::class, 'show'])->middleware('auth');
+
+Route::put('/tasks/{id}', [TaskController::class, 'updateTask'])->name('tasks.update');
+
 Route::get('/my-tasks', [TaskController::class, 'myTasks'])->name('tasks.my');
 
 Route::get('/attendance', [AttendanceController::class, 'myAttendance'])->name('attendance.index');
@@ -37,7 +46,9 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('tasks', TaskController::class);
 });
 
+
 Route::resource('tasks', TaskController::class);
+
 
 Route::post('/attendance-toggle', [AttendanceController::class, 'toggle'])->name('attendance.toggle');
 
