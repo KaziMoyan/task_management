@@ -33,10 +33,7 @@
 </div>
 
 
-<div class="modal-footer">
-    <button type="button" class="btn btn-success" id="saveTaskButton">Save</button>
-    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-</div>
+
 <script>
     $(document).ready(function () {
         // Event handler for the "Save" button click

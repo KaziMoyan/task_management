@@ -3,32 +3,46 @@
 namespace App\Http\Controllers;
 use Carbon\Carbon;
 use App\Models\Task;
+use App\Models\Group;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
+use Barryvdh\DomPDF\Facade\Pdf;
+
+
 class TaskController extends Controller
 {
     
-    public function index(Request $request)
+    public function index(Request $request) 
     {
-    $query = Task::query();
-
-    if ($request->has('search') && $request->search != '') {
-        $query->where('name', 'like', '%' . $request->search . '%')
-              ->orWhere('short_description', 'like', '%' . $request->search . '%');
-    }
-
+        $query = Task::query();
     
-    $tasks = $query->paginate(1);
-
-    return view('tasks.index', compact('tasks'));
-   }
+        // Search
+        if ($request->has('search') && $request->search != '') {
+            $query->where(function ($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->search . '%')
+                  ->orWhere('short_description', 'like', '%' . $request->search . '%');
+            });
+        }
+    
+        // Group Filter
+        if ($request->has('group_id') && $request->group_id != '') {
+            $query->where('group_id', $request->group_id);
+        }
+    
+        $tasks = $query->with('group')->paginate(3); // Updated pagination from 1 to 10 (can be changed)
+    
+        $groups = Group::all(); // Load all groups for the dropdown
+    
+        return view('tasks.index', compact('tasks', 'groups'));
+    }
 
     
     public function create()
     {
         $data['users']= User::get();
+        $data['groups'] = Group::get();
 
         return view('tasks.create',$data);
     }
@@ -47,12 +61,14 @@ class TaskController extends Controller
             'time_start' => 'required|date_format:H:i',
             'time_end' => 'required|date_format:H:i',
             'status' => 'required|string',
+            'group_id' => 'required|exists:groups,id',
         ]);
 
        
         Task::create([
             'assign_by_id' => auth()->id(),
            'user_id' => $request->user_id,
+           'group_id' => $request->group_id,
             'name' => $request->name,
             'short_description' => $request->short_description,
             'description' => $request->description,
@@ -75,8 +91,8 @@ class TaskController extends Controller
       
         $task = Task::findOrFail($id);
 
-       
-        return view('tasks.edit', compact('task'));
+        $groups = Group::all(); 
+        return view('tasks.edit', compact('task','groups'));
     }
 
     
@@ -134,10 +150,18 @@ class TaskController extends Controller
             $query->where('name', 'like', '%' . $request->search . '%');
         }
     
-        // Set pagination to 3 tasks per page
-        $tasks = $query->orderBy('date', 'desc')->paginate(2);  // Changed from 10 to 3
+        // Optional: Apply group filter if selected
+        if ($request->has('group_id') && $request->group_id != '') {
+            $query->where('group_id', $request->group_id);
+        }
     
-        return view('tasks.my_tasks', compact('tasks'));
+        // Set pagination to 2 tasks per page
+        $tasks = $query->orderBy('date', 'desc')->paginate(2);
+    
+        // ✅ Get all groups to pass to the view
+        $groups = Group::all();
+    
+        return view('tasks.my_tasks', compact('tasks', 'groups'));
     }
     
 
@@ -183,6 +207,66 @@ public function show($id)
 
     return view('tasks.task_details', compact('task', 'totalTime'));
 }
+
+
+
+
+public function exportPdf(Request $request)
+{
+    $userId = auth()->id();  // Get the currently authenticated user ID
+    $tasks = Task::where('user_id', $userId)->get(); // Filter tasks by the current user
+
+    $totalEstimateMinutes = 0;
+    $totalActualMinutes = 0;
+    $totalExtraMinutes = 0;
+
+    foreach ($tasks as $task) {
+        // Parse start and end times using Carbon
+        $start = Carbon::parse($task->time_start);
+        $end = Carbon::parse($task->time_end);
+
+        // Calculate actual time in minutes
+        $actualTimeInMinutes = $end->diffInMinutes($start);
+        $actualTimeInMinutes = max($actualTimeInMinutes, 0); // prevent negative
+
+        // Calculate extra time only if actual > estimated
+        $extraTimeInMinutes = max($actualTimeInMinutes - $task->minutes, 0);
+
+        // Accumulate totals
+        $totalEstimateMinutes += $task->minutes;
+        $totalActualMinutes += $actualTimeInMinutes;
+        $totalExtraMinutes += $extraTimeInMinutes;
+
+        // Attach human-readable versions for Blade view
+        $task->actual_time = $this->convertMinutesToHoursAndMinutes($actualTimeInMinutes);
+        $task->extra_time = $this->convertMinutesToHoursAndMinutes($extraTimeInMinutes);
+    }
+
+    // Final formatted total times
+    $totalEstimate = $this->convertMinutesToHoursAndMinutes($totalEstimateMinutes);
+    $totalActual = $this->convertMinutesToHoursAndMinutes($totalActualMinutes);
+    $totalExtra = $this->convertMinutesToHoursAndMinutes($totalExtraMinutes);
+
+    // Generate PDF view
+    $pdf = PDF::loadView('tasks.task_pdf', [
+        'tasks' => $tasks,
+        'totalEstimate' => $totalEstimate,
+        'totalActual' => $totalActual,
+        'totalExtra' => $totalExtra,
+    ]);
+
+    return $pdf->download('tasks_summary.pdf');
+}
+
+// Add this helper method to the same controller
+private function convertMinutesToHoursAndMinutes($minutes)
+{
+    $hours = floor($minutes / 60);
+    $mins = $minutes % 60;
+    return "{$hours} hours {$mins} minutes";
+}
+
+
 
 
 }

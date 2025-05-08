@@ -5,7 +5,7 @@
 </head>
 <body>
     <h1>Attendance Report for {{ $user->name }}</h1>
-    <p>Month: {{ $month }} Year: {{ $year }}</p>
+    <p><strong>Month:</strong> {{ $month }} <strong>Year:</strong> {{ $year }}</p>
 
     <!-- Total Working Hours -->
     <p><strong>Total Working Hours:</strong> 
@@ -21,7 +21,7 @@
                 @endphp
             @endif
         @endforeach
-        {{ $totalWorkingHours }} hours
+        <strong>{{ $totalWorkingHours }} hours</strong>
     </p>
 
     <!-- Attendance Table -->
@@ -31,15 +31,15 @@
                 <th>Date</th>
                 <th>Start Time</th>
                 <th>End Time</th>
-                <th>Working Hours</th> <!-- Added column for working hours -->
+                <th>Working Hours</th>
             </tr>
         </thead>
         <tbody>
             @foreach ($attendances as $attendance)
                 <tr>
                     <td>{{ \Carbon\Carbon::parse($attendance->date)->format('Y-m-d') }}</td>
-                    <td>{{ $attendance->start_time }}</td>
-                    <td>{{ $attendance->end_time }}</td>
+                    <td>{{ $attendance->start_time ?? '—' }}</td>
+                    <td>{{ $attendance->end_time ?? '—' }}</td>
                     <td>
                         @if ($attendance->start_time && $attendance->end_time)
                             @php

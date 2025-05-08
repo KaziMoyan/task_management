@@ -5,9 +5,20 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\GroupController;
 
 
 
+
+
+Route::get('/groups', [GroupController::class, 'index'])->name('groups.index');
+
+Route::resource('groups', GroupController::class);
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/groups/create', [GroupController::class, 'create'])->name('groups.create');
+    Route::post('/groups/store', [GroupController::class, 'store'])->name('groups.store');
+});
 
 
 Route::resource('tasks', TaskController::class);
@@ -20,6 +31,11 @@ Route::get('/tasks/{id}', [TaskController::class, 'show'])->middleware('auth');
 Route::put('/tasks/{id}', [TaskController::class, 'updateTask'])->name('tasks.update');
 
 Route::get('/my-tasks', [TaskController::class, 'myTasks'])->name('tasks.my');
+//Route::post('/tasks/export-pdf', [TaskController::class, 'exportPdf'])->name('tasks.exportPdf');
+//Route::get('/tasks/export-pdf', [TaskController::class, 'exportPdf'])->name('tasks.exportPdf');
+Route::get('/export-my-tasks', [TaskController::class, 'exportPdf'])->name('tasks.exportPdf');
+
+
 
 Route::get('/attendance', [AttendanceController::class, 'myAttendance'])->name('attendance.index');
 Route::get('/attendance/export', [AttendanceController::class, 'exportMyAttendance'])->name('attendance.export');
